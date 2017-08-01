@@ -43,52 +43,49 @@ class Board:
 				self.board[r][c] = new_group[r]
 
 	def check_group(self,group):
+
 		new_group = []
-		taken = [group[j] for j in range(len(group)) if isinstance(group[j], int)]
+		taken = set([j for j in group if isinstance(j, int)])
 		for i in range(len(group)):
 			if not isinstance(group[i],list):
 				valid_set = group[i]
 			else:
-				valid_set = [num for num in group[i] if num not in taken]
+				valid_set = set([num for num in group[i] if num not in taken])
 				if len(valid_set)==1:
 					valid_set = valid_set[0]
-					taken.append(valid_set)
+					taken.add(valid_set)
 			new_group.append(valid_set)
+			if len(taken)==len(group):
+				new_group += group[i+1:]
+				return new_group
+
 		return new_group
 
 	def is_finished(self):
 		num_finished = len([self.board[r][c] for r in range(9) for c in range(9) if not isinstance(self.board[r][c],list)])
 		return num_finished==81
 
-	def solve_slow(self):
+	def solve(self):
 		start = time.time()
-		while not b.is_finished():
-			b.check_squares()
-			b.check_cols()
-			b.check_rows()
+		while not self.is_finished():
+			if time.time()-start>1:
+				print "solve_a failed"
+				return 1
+			self.check_squares()
+			self.check_cols()
+			self.check_rows()
 		end = time.time()
-		print "elapsed %f"%(end-start)
+		print "elapsed a %f"%(end-start)
+		return 0
 
-	def solve_fast(self):
-		start = time.time()
-		num_finished = 0
-		for r in range(9):
-			for c in range(9):
-				vals = self.board[r][c]
-				if not isinstance(vals,list):
-					continue
-					num_finished += 1
-				for pos in vals:
-					if pos in self.row(r) or pos in self.col(c) or pos in self.square((r%3)*3, (c&3)*3):
-						self.board[r][c] = vals.remove(pos)
-				if not isinstance(self.board[r][c],list):
-					num_finished += 1
-		end = time.time()
-		print "elapsed %f"%(end-start)
+def solve(puzzle):
+	b = Board()
+	b.load_givens(puzzle)
+	b.solve()
 
 if __name__ == "__main__":
-	b = Board()
-	b.load_givens([
+	print "FLASH"
+	puzzle = [
 		[-1,-1,-1,2,9,-1,-1,-1,-1],
 		[5,-1,-1,-1,3,8,-1,4,1],
 		[7,3,-1,-1,4,1,-1,2,1],
@@ -98,6 +95,77 @@ if __name__ == "__main__":
 		[6,4,-1,-1,-1,7,5,-1,-1],
 		[-1,-1,7,9,5,-1,-1,6,-1],
 		[9,-1,-1,3,2,-1,-1,-1,-1]
-		])
-	b.solve_slow()
-b.solve_fast()
+		]
+
+	solve(puzzle)
+
+	print "EASY"
+	puzzle = [
+		[0,0,8,7,3,1,0,0,0],
+		[0,0,7,5,4,9,0,2,3],
+		[9,0,0,6,2,8,1,0,0],
+		[4,7,3,2,0,0,0,0,8],
+		[8,1,6,0,5,0,0,0,2],
+		[5,0,0,0,0,0,0,0,6],
+		[0,5,4,1,6,0,0,0,9],
+		[0,0,1,0,0,0,0,0,4],
+		[3,0,2,9,7,0,0,0,0]
+	]
+	solve(puzzle)
+
+	print "MEDIUM"
+	puzzle = [
+		[0,8,1,3,0,0,0,6,2],
+		[4,0,0,0,0,0,0,3,0],
+		[2,0,5,1,0,0,0,0,9],
+		[5,0,3,0,1,0,0,7,0],
+		[0,6,0,4,3,0,0,9,8],
+		[0,0,0,0,9,0,0,0,0],
+		[7,0,0,8,2,0,4,1,0],
+		[0,0,2,0,7,0,0,0,0],
+		[0,0,0,6,0,0,5,0,0]
+	]
+	solve(puzzle)
+
+	print "HARD"
+	puzzle = [
+		[0,0,9,0,3,0,0,4,6],
+		[0,5,3,0,0,0,9,0,0],
+		[6,0,0,9,7,2,1,0,0],
+		[0,0,0,0,0,4,0,0,0],
+		[9,7,5,0,8,0,0,6,0],
+		[0,0,8,0,5,0,0,0,1],
+		[5,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,1,5,0,0],
+		[0,0,0,0,9,8,0,7,0]
+	]
+	solve(puzzle)
+
+	print "EXPERT"
+	puzzle = [
+		[0,0,9,0,2,0,6,0,0],
+		[0,0,0,4,0,0,0,5,0],
+		[5,4,0,0,0,1,0,0,0],
+		[0,5,0,9,4,3,2,0,6],
+		[9,0,2,0,0,0,0,0,0],
+		[0,0,6,0,0,0,0,0,0],
+		[0,0,0,5,0,2,0,0,0],
+		[8,0,0,3,0,0,1,0,0],
+		[1,2,0,0,0,0,0,4,0]
+	]
+	solve(puzzle)
+
+	print "HARDEST"
+	puzzle = [
+		[8,0,0,0,0,0,0,0,0],
+		[0,0,3,6,0,0,0,0,0],
+		[0,7,0,0,9,0,2,0,0],
+		[0,5,0,0,0,7,0,0,0],
+		[0,0,0,0,4,5,7,0,0],
+		[0,0,0,1,0,0,0,3,0],
+		[0,0,1,0,0,0,0,6,8],
+		[0,0,8,5,0,0,0,1,0],
+		[0,9,0,0,0,0,4,0,0]
+	]
+	solve(puzzle)
+
