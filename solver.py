@@ -43,32 +43,27 @@ class Board:
 				self.board[r][c] = new_group[r]
 
 	def check_group(self,group):
-
 		new_group = []
-		taken = set([j for j in group if isinstance(j, int)])
+		taken = [group[j] for j in range(len(group)) if isinstance(group[j], int)]
 		for i in range(len(group)):
 			if not isinstance(group[i],list):
 				valid_set = group[i]
 			else:
-				valid_set = set([num for num in group[i] if num not in taken])
+				valid_set = [num for num in group[i] if num not in taken]
 				if len(valid_set)==1:
 					valid_set = valid_set[0]
-					taken.add(valid_set)
+					taken.append(valid_set)
 			new_group.append(valid_set)
-			if len(taken)==len(group):
-				new_group += group[i+1:]
-				return new_group
-
 		return new_group
 
 	def is_finished(self):
 		num_finished = len([self.board[r][c] for r in range(9) for c in range(9) if not isinstance(self.board[r][c],list)])
 		return num_finished==81
 
-	def solve(self):
+	def solve_a(self):
 		start = time.time()
 		while not self.is_finished():
-			if time.time()-start>1:
+			if time.time()-start > 0.6:
 				print "solve_a failed"
 				return 1
 			self.check_squares()
@@ -78,10 +73,44 @@ class Board:
 		print "elapsed a %f"%(end-start)
 		return 0
 
+	def solve_b(self):
+		start = time.time()
+		num_finished = set()
+		cont = True
+		while cont:
+			for r in range(9):
+				if not cont:
+					break
+				for c in range(9):
+					vals = self.board[r][c]
+					if len(num_finished)==81:
+						cont = False
+						break
+
+					if not isinstance(vals,list):
+						num_finished.add((r,c))
+						continue
+
+					for pos in vals:
+						if pos in self.row(r) or pos in self.col(c) or pos in self.square((r%3)*3, (c%3)*3):
+							self.board[r][c].remove(pos)
+						if len(self.board[r][c])==1:
+							self.board[r][c]=self.board[r][c][0]
+							num_finished.add((r,c))
+					if not isinstance(self.board[r][c],list):
+						num_finished.add((r,c))
+
+		end = time.time()
+		print "elapsed b %f"%(end-start)
+
 def solve(puzzle):
 	b = Board()
 	b.load_givens(puzzle)
-	b.solve()
+	x = b.solve_a()
+	if x>0:
+		b.solve_b()
+	for row in b.board:
+		print row
 
 if __name__ == "__main__":
 	print "FLASH"
@@ -155,17 +184,17 @@ if __name__ == "__main__":
 	]
 	solve(puzzle)
 
-	print "HARDEST"
-	puzzle = [
-		[8,0,0,0,0,0,0,0,0],
-		[0,0,3,6,0,0,0,0,0],
-		[0,7,0,0,9,0,2,0,0],
-		[0,5,0,0,0,7,0,0,0],
-		[0,0,0,0,4,5,7,0,0],
-		[0,0,0,1,0,0,0,3,0],
-		[0,0,1,0,0,0,0,6,8],
-		[0,0,8,5,0,0,0,1,0],
-		[0,9,0,0,0,0,4,0,0]
-	]
-	solve(puzzle)
+	# print "HARDEST"
+	# puzzle = [
+	# 	[8,0,0,0,0,0,0,0,0],
+	# 	[0,0,3,6,0,0,0,0,0],
+	# 	[0,7,0,0,9,0,2,0,0],
+	# 	[0,5,0,0,0,7,0,0,0],
+	# 	[0,0,0,0,4,5,7,0,0],
+	# 	[0,0,0,1,0,0,0,3,0],
+	# 	[0,0,1,0,0,0,0,6,8],
+	# 	[0,0,8,5,0,0,0,1,0],
+	# 	[0,9,0,0,0,0,4,0,0]
+	# ]
+	# solve(puzzle)
 
