@@ -137,8 +137,9 @@ class Board:
 					item = sq[i]
 					if isinstance(item,list):
 						for number in item:
-							occurences[str(number)][0].append(item_r)
-							occurences[str(number)][1].append(item_c)
+							if number in nums:
+								occurences[str(number)][0].append(item_r)
+								occurences[str(number)][1].append(item_c)
 
 				occurence_pairs = {str(num):[] for num in nums}
 				for num in nums:
@@ -221,12 +222,24 @@ class Board:
 		taken_arrs = [i for i in group if isinstance(i,list) and group.count(i)==len(i)]
 		taken_arr_vals = list(set([num for arr in taken_arrs for num in arr]))
 		taken = [j for j in group if isinstance(j, int)]
+
+		exists_only_with = {str(main_num):{str(num):True for num in range(1,10) if num!=main_num and num not in taken} for main_num in range(1,10) if main_num not in taken}
+
 		for i in range(len(group)):
 			if not isinstance(group[i],list):
 				valid_set = group[i]
 				num_occurences[str(valid_set)].append(i)
 			else:
 				valid_set = [num for num in group[i] if num not in taken]
+
+				# new
+				for this_number in sorted(valid_set):
+					for key in exists_only_with[str(this_number)]:
+						if this_number in valid_set and int(key) not in valid_set:
+							exists_only_with[str(this_number)][key] = False
+							exists_only_with[key][str(this_number)] = False
+				# new
+
 				for num in valid_set:
 					num_occurences[str(num)].append(i)
 				if group[i] not in taken_arrs:
@@ -238,6 +251,19 @@ class Board:
 					taken.append(valid_set)
 			new_group.append(valid_set)
 
+		# new
+		pre_new = new_group
+		for main_num in exists_only_with:
+			exc = [key for key in exists_only_with[main_num] if exists_only_with[main_num][key]]
+			if len(exc)==1:
+				ocs = len([i for i in new_group if isinstance(i,list) and (int(main_num) in i and int(exc[0]) in i)])
+				other = [key for key in exists_only_with[exc[0]] if exists_only_with[exc[0]][key]]
+				if len(other)==1 and ocs==2:
+					for i in range(len(new_group)):
+						if isinstance(new_group[i],list) and (int(main_num) in new_group[i] and int(exc[0]) in new_group[i]):
+							new_group[i] = [int(main_num), int(exc[0])]
+		# new
+		
 		for num in num_occurences:
 			if len(num_occurences[num])==1:
 				new_group[num_occurences[num][0]] = int(num)
@@ -267,7 +293,7 @@ def solve(name,puzzle):
 	b = Board()
 	b.load_givens(puzzle)
 	b.solve_a()
-	# print b.square(3,6)
+	print b.square(3,3)
 	print ""
 	# with open('%s.txt'%(name),'w') as t:
 	# 	for row in puzzle:
@@ -294,3 +320,7 @@ def solve_image(file):
 
 if __name__ == "__main__":
 	solve_image('puzzle5.png') 
+	# b = Board()
+	# b.check_group([6, [1, 3, 5, 8], [1, 3, 8], 9, [1, 2, 4, 5, 8], [1, 2, 4, 8], [5, 8], [1, 3, 5, 8], 7])
+
+
